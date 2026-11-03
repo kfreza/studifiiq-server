@@ -1,9 +1,10 @@
 import { MongoClient, ServerApiVersion } from "mongodb";
 
-// One cached connection, reused across requests (works locally and on Vercel serverless)
+// cached connection
 let cs_client = null;
 let cs_dbPromise = null;
 
+// connect
 export const cs_connectDB = () => {
   if (cs_dbPromise) return cs_dbPromise;
 
@@ -18,14 +19,14 @@ export const cs_connectDB = () => {
     .connect()
     .then((client) => client.db(process.env.CS_DB_NAME || "studioSpaceDB"))
     .catch((err) => {
-      cs_dbPromise = null; // allow a retry on the next request
+      cs_dbPromise = null;
       throw err;
     });
 
   return cs_dbPromise;
 };
 
-// All app-owned collections in one place
+// collections
 export const cs_getCollections = async () => {
   const cs_db = await cs_connectDB();
   return {
@@ -33,7 +34,6 @@ export const cs_getCollections = async () => {
     cs_bookings: cs_db.collection("cs_bookings"),
     cs_reviews: cs_db.collection("cs_reviews"),
     cs_wishlist: cs_db.collection("cs_wishlist"),
-    // BetterAuth-owned collections (names predefined by BetterAuth — read only here)
     users: cs_db.collection("user"),
     sessions: cs_db.collection("session"),
   };
