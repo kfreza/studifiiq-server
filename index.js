@@ -1,12 +1,15 @@
 import "dotenv/config";
 import express from "express";
 import cors from "cors";
+import cookieParser from "cookie-parser";
 import { cs_connectDB } from "./src/config/db.js";
 import { cs_notFound, cs_errorHandler } from "./src/middleware/errorHandler.js";
 import studioRoutes from "./src/routes/studioRoutes.js";
+import authRoutes from "./src/routes/authRoutes.js";
 
 // app setup
 const app = express();
+app.set("trust proxy", 1);
 const cs_port = process.env.PORT || 5000;
 const cs_allowedOrigins = (process.env.CS_CLIENT_URL || "http://localhost:3000")
   .split(",")
@@ -15,6 +18,7 @@ const cs_allowedOrigins = (process.env.CS_CLIENT_URL || "http://localhost:3000")
 // middleware
 app.use(cors({ origin: cs_allowedOrigins, credentials: true }));
 app.use(express.json({ limit: "1mb" }));
+app.use(cookieParser());
 
 // health routes
 app.get("/", (req, res) => {
@@ -28,6 +32,7 @@ app.get("/api/health", async (req, res) => {
 });
 
 // api routes
+app.use("/api", authRoutes);
 app.use("/api", studioRoutes);
 
 // error handlers
