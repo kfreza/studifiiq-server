@@ -6,6 +6,7 @@ import { cs_connectDB } from "./src/config/db.js";
 import { cs_notFound, cs_errorHandler } from "./src/middleware/errorHandler.js";
 import studioRoutes from "./src/routes/studioRoutes.js";
 import authRoutes from "./src/routes/authRoutes.js";
+import reviewRoutes from "./src/routes/reviewRoutes.js";
 
 // app setup
 const app = express();
@@ -34,6 +35,7 @@ app.get("/api/health", async (req, res) => {
 // api routes
 app.use("/api", authRoutes);
 app.use("/api", studioRoutes);
+app.use("/api", reviewRoutes);
 
 // error handlers
 app.use(cs_notFound);
