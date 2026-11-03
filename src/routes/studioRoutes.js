@@ -2,6 +2,8 @@ import { Router } from "express";
 import { cs_getCollections } from "../config/db.js";
 import { CS_CATEGORIES, CS_SORT_OPTIONS } from "../utils/constants.js";
 import { cs_httpError, cs_toObjectId } from "../utils/httpError.js";
+import { cs_validateStudio } from "../utils/validateStudio.js";
+import { cs_verifyToken } from "../middleware/verifyToken.js";
 
 const router = Router();
 
@@ -63,6 +65,69 @@ router.get("/studios/:id", async (req, res) => {
   const studio = await cs_studios.findOne({ _id: cs_toObjectId(req.params.id, "Studio") });
   if (!studio) throw cs_httpError(404, "Studio not found.");
   res.json(studio);
+});
+
+// owner check
+const cs_findOwnedStudio = async (cs_studios, id, email) => {
+  const cs_studio = await cs_studios.findOne({ _id: cs_toObjectId(id, "Studio") });
+  if (!cs_studio) throw cs_httpError(404, "Studio not found.");
+  if (cs_studio.ownerEmail !== email) throw cs_httpError(403, "You can only change studios you host.");
+  return cs_studio;
+};
+
+// create studio
+router.post("/studios", cs_verifyToken, async (req, res) => {
+  const cs_data = cs_validateStudio(req.body);
+  const cs_now = new Date();
+  const cs_doc = {
+    ...cs_data,
+    ownerName: req.cs_user.name,
+    ownerEmail: req.cs_user.email,
+    ownerPhoto: req.cs_user.photo || "",
+    rating: 0,
+    reviewCount: 0,
+    createdAt: cs_now,
+    updatedAt: cs_now,
+  };
+  const { cs_studios } = await cs_getCollections();
+  const { insertedId } = await cs_studios.insertOne(cs_doc);
+  res.status(201).json({ ...cs_doc, _id: insertedId });
+});
+
+// my listings
+router.get("/my-listings", cs_verifyToken, async (req, res) => {
+  const { cs_studios } = await cs_getCollections();
+  const studios = await cs_studios.find({ ownerEmail: req.cs_user.email }).sort(CS_SORT_OPTIONS.newest).toArray();
+  res.json(studios);
+});
+
+// update studio
+router.patch("/studios/:id", cs_verifyToken, async (req, res) => {
+  const { cs_studios } = await cs_getCollections();
+  const cs_studio = await cs_findOwnedStudio(cs_studios, req.params.id, req.cs_user.email);
+  const cs_data = cs_validateStudio(req.body);
+  const studio = await cs_studios.findOneAndUpdate(
+    { _id: cs_studio._id },
+    { $set: { ...cs_data, updatedAt: new Date() } },
+    { returnDocument: "after" }
+  );
+  res.json(studio);
+});
+
+// delete studio
+router.delete("/studios/:id", cs_verifyToken, async (req, res) => {
+  const { cs_studios, cs_reviews, cs_bookings, cs_wishlist } = await cs_getCollections();
+  const cs_studio = await cs_findOwnedStudio(cs_studios, req.params.id, req.cs_user.email);
+  await cs_studios.deleteOne({ _id: cs_studio._id });
+  await Promise.all([
+    cs_reviews.deleteMany({ studioId: cs_studio._id }),
+    cs_wishlist.deleteMany({ studioId: cs_studio._id }),
+    cs_bookings.updateMany(
+      { studioId: cs_studio._id, status: "Pending" },
+      { $set: { status: "Cancelled", updatedAt: new Date() } }
+    ),
+  ]);
+  res.json({ ok: true, deletedId: cs_studio._id });
 });
 
 export default router;
