@@ -1,8 +1,8 @@
 import { MongoClient, ServerApiVersion } from "mongodb";
 import dns from "node:dns";
 
-// dns fix for srv lookup
-dns.setServers(["8.8.8.8", "1.1.1.1"]);
+// dns fix for srv lookup on local networks
+if (process.env.NODE_ENV !== "production") dns.setServers(["8.8.8.8", "1.1.1.1"]);
 
 // cached connection
 let cs_client = null;
