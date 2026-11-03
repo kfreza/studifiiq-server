@@ -7,6 +7,8 @@ import { cs_notFound, cs_errorHandler } from "./src/middleware/errorHandler.js";
 import studioRoutes from "./src/routes/studioRoutes.js";
 import authRoutes from "./src/routes/authRoutes.js";
 import reviewRoutes from "./src/routes/reviewRoutes.js";
+import bookingRoutes from "./src/routes/bookingRoutes.js";
+import uploadRoutes from "./src/routes/uploadRoutes.js";
 
 // app setup
 const app = express();
@@ -18,6 +20,7 @@ const cs_allowedOrigins = (process.env.CS_CLIENT_URL || "http://localhost:3000")
 
 // middleware
 app.use(cors({ origin: cs_allowedOrigins, credentials: true }));
+app.use("/api/upload", express.json({ limit: "8mb" }));
 app.use(express.json({ limit: "1mb" }));
 app.use(cookieParser());
 
@@ -36,6 +39,8 @@ app.get("/api/health", async (req, res) => {
 app.use("/api", authRoutes);
 app.use("/api", studioRoutes);
 app.use("/api", reviewRoutes);
+app.use("/api", bookingRoutes);
+app.use("/api", uploadRoutes);
 
 // error handlers
 app.use(cs_notFound);
