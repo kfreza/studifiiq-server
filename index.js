@@ -9,6 +9,7 @@ import authRoutes from "./src/routes/authRoutes.js";
 import reviewRoutes from "./src/routes/reviewRoutes.js";
 import bookingRoutes from "./src/routes/bookingRoutes.js";
 import uploadRoutes from "./src/routes/uploadRoutes.js";
+import wishlistRoutes from "./src/routes/wishlistRoutes.js";
 
 // app setup
 const app = express();
@@ -41,6 +42,7 @@ app.use("/api", studioRoutes);
 app.use("/api", reviewRoutes);
 app.use("/api", bookingRoutes);
 app.use("/api", uploadRoutes);
+app.use("/api", wishlistRoutes);
 
 // error handlers
 app.use(cs_notFound);

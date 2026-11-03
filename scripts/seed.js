@@ -141,7 +141,7 @@ const cs_seedReviews = [
 // run seed
 const cs_run = async () => {
   await cs_connectDB();
-  const { cs_studios, cs_reviews } = await cs_getCollections();
+  const { cs_studios, cs_reviews, cs_wishlist } = await cs_getCollections();
 
   // clear old seed
   await cs_studios.deleteMany({ isSeed: true });
@@ -186,6 +186,8 @@ const cs_run = async () => {
   await cs_studios.createIndex({ createdAt: -1 });
   await cs_studios.createIndex({ ownerEmail: 1 });
   await cs_reviews.createIndex({ studioId: 1, createdAt: -1 });
+  await cs_reviews.createIndex({ studioId: 1, userEmail: 1 });
+  await cs_wishlist.createIndex({ userEmail: 1, studioId: 1 }, { unique: true });
 
   console.log(`Seeded ${cs_seedStudios.length} studios with reviews.`);
   process.exit(0);
