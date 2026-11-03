@@ -21,7 +21,7 @@ app.get("/", (req, res) => {
   res.json({ name: "StudioSpace API", status: "running" });
 });
 
-app.get("/api/cs_health", async (req, res) => {
+app.get("/api/health", async (req, res) => {
   const cs_db = await cs_connectDB();
   await cs_db.command({ ping: 1 });
   res.json({ ok: true, database: "connected" });

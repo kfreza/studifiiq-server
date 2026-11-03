@@ -41,14 +41,14 @@ router.get("/studios", async (req, res) => {
 });
 
 // featured studios
-router.get("/cs_featured", async (req, res) => {
+router.get("/featured", async (req, res) => {
   const { cs_studios } = await cs_getCollections();
   const studios = await cs_studios.find().sort(CS_SORT_OPTIONS.rating).limit(6).toArray();
   res.json(studios);
 });
 
 // category counts
-router.get("/cs_categories", async (req, res) => {
+router.get("/categories", async (req, res) => {
   const { cs_studios } = await cs_getCollections();
   const cs_counts = await cs_studios
     .aggregate([{ $group: { _id: "$category", count: { $sum: 1 } } }])
