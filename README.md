@@ -1,6 +1,6 @@
-# StudioSpace API
+# Studifiiq API
 
-Express and MongoDB server for [StudioSpace](https://studifiiq-client.vercel.app), a marketplace for booking creative studios by the hour. Client repository: https://github.com/kfreza/studifiiq-client
+Express and MongoDB server for [Studifiiq](https://studifiiq-client.vercel.app), a marketplace for booking creative studios by the hour. Client repository: https://github.com/kfreza/studifiiq-client
 
 ## Endpoints
 

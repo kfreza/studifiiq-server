@@ -27,7 +27,7 @@ app.use(cookieParser());
 
 // health routes
 app.get("/", (req, res) => {
-  res.json({ name: "StudioSpace API", status: "running" });
+  res.json({ name: "Studifiiq API", status: "running" });
 });
 
 app.get("/api/health", async (req, res) => {
@@ -53,7 +53,7 @@ if (!process.env.VERCEL) {
   cs_connectDB()
     .then(() => {
       console.log("MongoDB connected");
-      app.listen(cs_port, () => console.log(`StudioSpace API running on http://localhost:${cs_port}`));
+      app.listen(cs_port, () => console.log(`Studifiiq API running on http://localhost:${cs_port}`));
     })
     .catch((err) => {
       console.error("MongoDB connection failed:", err.message);

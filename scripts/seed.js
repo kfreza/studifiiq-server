@@ -6,12 +6,12 @@ const cs_img = (id) => `https://images.unsplash.com/photo-${id}?w=1200&q=80&auto
 // seed owners
 const CS_OWNER = {
   ownerName: process.env.CS_SEED_OWNER_NAME || "Examiner",
-  ownerEmail: process.env.CS_SEED_OWNER_EMAIL || "examiner@studiospace.dev",
+  ownerEmail: process.env.CS_SEED_OWNER_EMAIL || "examiner@studifiiq.dev",
   ownerPhoto: process.env.CS_SEED_OWNER_PHOTO || "",
 };
 const CS_SECOND_HOST = {
-  ownerName: "StudioSpace Demo Host",
-  ownerEmail: "host@studiospace.dev",
+  ownerName: "Studifiiq Demo Host",
+  ownerEmail: "host@studifiiq.dev",
   ownerPhoto: "",
 };
 const CS_SECOND_HOST_STUDIOS = [1, 4, 6, 9];
