@@ -3,12 +3,18 @@ import { cs_connectDB, cs_getCollections } from "../src/config/db.js";
 
 const cs_img = (id) => `https://images.unsplash.com/photo-${id}?w=1200&q=80&auto=format&fit=crop`;
 
-// seed owner
+// seed owners
 const CS_OWNER = {
-  ownerName: process.env.CS_SEED_OWNER_NAME || "StudioSpace Demo Host",
-  ownerEmail: process.env.CS_SEED_OWNER_EMAIL || "host@studiospace.dev",
+  ownerName: process.env.CS_SEED_OWNER_NAME || "Examiner",
+  ownerEmail: process.env.CS_SEED_OWNER_EMAIL || "examiner@studiospace.dev",
   ownerPhoto: process.env.CS_SEED_OWNER_PHOTO || "",
 };
+const CS_SECOND_HOST = {
+  ownerName: "StudioSpace Demo Host",
+  ownerEmail: "host@studiospace.dev",
+  ownerPhoto: "",
+};
+const CS_SECOND_HOST_STUDIOS = [1, 4, 6, 9];
 
 // studios
 const cs_seedStudios = [
@@ -141,11 +147,14 @@ const cs_seedReviews = [
 // run seed
 const cs_run = async () => {
   await cs_connectDB();
-  const { cs_studios, cs_reviews, cs_wishlist } = await cs_getCollections();
+  const { cs_studios, cs_reviews, cs_wishlist, cs_bookings } = await cs_getCollections();
 
   // clear old seed
   await cs_studios.deleteMany({ isSeed: true });
   await cs_reviews.deleteMany({ isSeed: true });
+  await cs_bookings.deleteMany({ isSeed: true });
+  await cs_wishlist.deleteMany({ isSeed: true });
+  const cs_ids = [];
 
   const cs_now = Date.now();
   const cs_day = 24 * 60 * 60 * 1000;
@@ -158,13 +167,15 @@ const cs_run = async () => {
     const { insertedId } = await cs_studios.insertOne({
       ...studio,
       images: studio.images.map(cs_img),
-      ...CS_OWNER,
+      ...(CS_SECOND_HOST_STUDIOS.includes(index) ? CS_SECOND_HOST : CS_OWNER),
       rating: Math.round(cs_avg * 10) / 10,
       reviewCount: cs_reviewList.length,
       isSeed: true,
       createdAt: cs_createdAt,
       updatedAt: cs_createdAt,
     });
+
+    cs_ids.push({ _id: insertedId, ...studio, ...(CS_SECOND_HOST_STUDIOS.includes(index) ? CS_SECOND_HOST : CS_OWNER) });
 
     await cs_reviews.insertMany(
       cs_reviewList.map(([userName, rating, comment], reviewIndex) => ({
@@ -180,6 +191,61 @@ const cs_run = async () => {
     );
   }
 
+  // sample bookings
+  const cs_dateFrom = (days) => new Date(cs_now + days * cs_day).toISOString().slice(0, 10);
+  const cs_booking = (studioIndex, guest, days, startTime, endTime, status) => {
+    const cs_studio = cs_ids[studioIndex];
+    const date = cs_dateFrom(days);
+    const start = new Date(`${date}T${startTime}:00.000Z`);
+    const end = new Date(`${date}T${endTime}:00.000Z`);
+    const hours = (end - start) / (60 * 60 * 1000);
+    const subtotal = hours * cs_studio.hourlyRate;
+    const createdAt = new Date(Math.min(cs_now, start.getTime()) - 2 * cs_day);
+    return {
+      studioId: cs_studio._id,
+      studioTitle: cs_studio.title,
+      studioImage: cs_img(cs_studio.images[0]),
+      studioLocation: cs_studio.location,
+      hostName: cs_studio.ownerName,
+      hostEmail: cs_studio.ownerEmail,
+      userName: guest.name,
+      userEmail: guest.email,
+      date,
+      startTime,
+      endTime,
+      start,
+      end,
+      hours,
+      hourlyRate: cs_studio.hourlyRate,
+      securityDeposit: cs_studio.securityDeposit,
+      subtotal,
+      totalPrice: subtotal + cs_studio.securityDeposit,
+      status,
+      isSeed: true,
+      createdAt,
+      updatedAt: createdAt,
+    };
+  };
+  const cs_examiner = { name: CS_OWNER.ownerName, email: CS_OWNER.ownerEmail };
+  await cs_bookings.insertMany([
+    cs_booking(1, cs_examiner, -6, "10:00", "14:00", "Completed"),
+    cs_booking(4, cs_examiner, 3, "09:00", "13:00", "Confirmed"),
+    cs_booking(6, cs_examiner, 7, "15:00", "17:00", "Pending"),
+    cs_booking(0, { name: "Maya Chen", email: "maya.chen@example.com" }, 5, "10:00", "13:00", "Pending"),
+    cs_booking(3, { name: "Marcus Johnson", email: "marcus.johnson@example.com" }, 4, "08:00", "16:00", "Confirmed"),
+    cs_booking(7, { name: "Zara Ahmed", email: "zara.ahmed@example.com" }, -10, "12:00", "16:00", "Completed"),
+  ]);
+
+  // sample wishlist
+  await cs_wishlist.insertMany(
+    [4, 9].map((studioIndex) => ({
+      userEmail: CS_OWNER.ownerEmail,
+      studioId: cs_ids[studioIndex]._id,
+      isSeed: true,
+      createdAt: new Date(),
+    }))
+  );
+
   // indexes
   await cs_studios.createIndex({ category: 1 });
   await cs_studios.createIndex({ rating: -1, reviewCount: -1 });
@@ -189,7 +255,7 @@ const cs_run = async () => {
   await cs_reviews.createIndex({ studioId: 1, userEmail: 1 });
   await cs_wishlist.createIndex({ userEmail: 1, studioId: 1 }, { unique: true });
 
-  console.log(`Seeded ${cs_seedStudios.length} studios with reviews.`);
+  console.log(`Seeded ${cs_seedStudios.length} studios (8 owned by ${CS_OWNER.ownerEmail}), reviews, 6 bookings and 2 saved studios.`);
   process.exit(0);
 };
 
