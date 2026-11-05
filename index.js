@@ -21,7 +21,7 @@ const cs_allowedOrigins = (process.env.CS_CLIENT_URL || "http://localhost:3000")
 
 // middleware
 app.use(cors({ origin: cs_allowedOrigins, credentials: true }));
-app.use("/api/upload", express.json({ limit: "8mb" }));
+app.use("/api/upload", express.json({ limit: "5mb" }));
 app.use(express.json({ limit: "1mb" }));
 app.use(cookieParser());
 
